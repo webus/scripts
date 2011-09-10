@@ -1,0 +1,76 @@
+#!/bin/bash
+set +v
+clear 
+PLAY_VERSION=$1
+PLAY_DIR="/usr/local/share/play"
+PLAY_EXT_PATH=$PLAY_DIR/play-$PLAY_VERSION
+
+check_aviable_play() {
+	echo "check for availability in the system..."
+	if [ ! -d $PLAY_DIR/$PLAY_VERSION ]; then
+		down_version;
+		set_links_to_play;
+	else
+		echo "play version $PLAY_VERSION available in the system"
+		echo "do change the default version to $PLAY_VERSION"
+		set_links_to_play;
+	fi
+}
+
+set_links_to_play() {
+	cd $PLAY_DIR
+	check_link_dir $PLAY_VERSION
+	sudo ln -s play-$PLAY_VERSION $PLAY_VERSION
+	check_link_exists /usr/local/bin/play
+	sudo ln -s $PLAY_DIR/$PLAY_VERSION/play /usr/local/bin/play		
+}
+
+check_play_ext_path() {
+	if [ -d $PLAY_EXT_PATH ]; then
+		sudo rm -RI $PLAY_EXT_PATH;
+	fi;
+};
+
+check_link_dir() {
+	if [ -d $1 ]; then
+		sudo rm $1;
+	fi;
+
+}
+
+check_link_exists() {
+	if [ -f $1 ]; then
+		sudo rm $1;
+	fi;
+};
+
+check_main_path() {
+	if [ ! -d $PLAY_DIR ]; then
+		sudo mkdir $PLAY_DIR;
+	fi
+};
+
+down_version() {
+	echo "downloading $PLAY_VERSION"
+	check_main_path
+	cd $PLAY_DIR
+
+	if [ ! -f play-$PLAY_VERSION ]; then
+		sudo wget -c http://download.playframework.org/releases/play-$PLAY_VERSION.zip
+	fi
+
+	if [ -d $PLAY_DIR ]; then
+		#directory exists
+		check_play_ext_path
+		sudo unzip play-$PLAY_VERSION.zip -d $PLAY_DIR
+	else
+		#dir not exists
+		sudo mkdir $PLAY_DIR
+		sudo unzip play-$PLAY_VERSION.zip -d $PLAY_DIR
+	fi
+
+	set_links_to_play;	
+};
+
+check_aviable_play
+

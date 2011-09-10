@@ -1,0 +1,83 @@
+#!/bin/bash
+set +v
+clear 
+SCALA_VERSION=$1
+SCALA_DIR="/usr/local/share/scala"
+SCALA_EXT_PATH=$SCALA_DIR/scala-$SCALA_VERSION
+
+check_aviable_scala() {
+	echo "check for availability in the system..."
+	if [ ! -d $SCALA_DIR/$SCALA_VERSION ]; then
+		down_version;
+		set_links_to_scala;
+	else
+		echo "scala version $SCALA_VERSION available in the system"
+		echo "do change the default version to $SCALA_VERSION"
+		set_links_to_scala;
+	fi
+}
+
+set_links_to_scala() {
+	cd $SCALA_DIR
+	check_link_dir $SCALA_VERSION
+	sudo ln -s scala-$SCALA_VERSION $SCALA_VERSION
+	check_link_exists /usr/local/bin/scala
+	check_link_exists /usr/local/bin/scalac
+	check_link_exists /usr/local/bin/scalap
+	check_link_exists /usr/local/bin/fsc
+	check_link_exists /usr/local/bin/scaladoc
+	sudo ln -s $SCALA_DIR/$SCALA_VERSION/bin/scala /usr/local/bin/scala
+	sudo ln -s $SCALA_DIR/$SCALA_VERSION/bin/scalac /usr/local/bin/scalac
+	sudo ln -s $SCALA_DIR/$SCALA_VERSION/bin/scalap /usr/local/bin/scalap
+	sudo ln -s $SCALA_DIR/$SCALA_VERSION/bin/fsc /usr/local/bin/fsc
+	sudo ln -s $SCALA_DIR/$SCALA_VERSION/bin/scaladoc /usr/local/bin/scaladoc
+}
+
+check_scala_ext_path() {
+	if [ -d $SCALA_EXT_PATH ]; then
+		sudo rm -RI $SCALA_EXT_PATH;
+	fi;
+}
+
+check_link_dir() {
+	if [ -d $1 ]; then
+		sudo rm $1;
+	fi;
+}
+
+check_link_exists() {
+	if [ -f $1 ]; then
+		sudo rm $1;
+	fi;
+}
+
+check_main_path() {
+	if [ ! -d $SCALA_DIR ]; then
+		sudo mkdir $SCALA_DIR;
+	fi
+}
+
+down_version() {
+	echo "downloading $SCALA_VERSION"
+	check_main_path
+	cd $SCALA_DIR
+
+	if [ ! -f scala-$SCALA_VERSION ]; then
+		#http://www.scala-lang.org/downloads/distrib/files/scala-2.9.1.final.tgz
+		sudo wget -c http://www.scala-lang.org/downloads/distrib/files/scala-$SCALA_VERSION.tgz
+	fi
+
+	if [ -d $SCALA_DIR ]; then
+		#directory exists
+		check_scala_ext_path
+		sudo tar xvzf scala-$SCALA_VERSION.tgz
+	else
+		#dir not exists
+		#sudo mkdir $SCALA_DIR
+		sudo tar xvzf scala-$SCALA_VERSION.tgz
+	fi
+
+	set_links_to_scala;	
+}
+
+check_aviable_scala
